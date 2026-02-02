@@ -1,0 +1,62 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body, html {
+    height: 100vh;
+    background: #1a1a1a;
+    color: #c4c4c4;
+}
+
+header {
+    background: #161616;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 0;
+    gap: 12px;
+}
+
+header nav {
+    max-width: 800px;
+    width: 100%;
+    height: 48px;
+    display: flex;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.nav-btn {
+    flex: 0.25;
+    background: #383838;
+    border: 0;
+    outline: 0;
+    transition: 0.1s all ease-in-out;
+}
+
+.nav-btn:hover,
+.nav-active { background: #575757; }
+
+section {
+    padding: 24px 32px;
+    border: 1px solid red;
+}
+
+section h2 {
+    font-size: 1.9rem;
+}
+
+#sez-campi {
+    display: flex;
+    flex-direction: row;
+}
+
+
+
+#sez-campi #dettaglio-campo {
+    border: 1px solid blue;
+}
+
