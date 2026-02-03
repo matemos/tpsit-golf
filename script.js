@@ -4,7 +4,7 @@ function showSection(id, btn) {
     const sections = ['sez-campi', 'sez-giocatori', 'sez-tornei', 'sez-inserimento'];
 
     sections.forEach(s => {
-        document.getElementById(s).style.display = (s === id) ? 'block' : 'none';
+        document.getElementById(s).style.display = (s === id) ? 'flex' : 'none';
     });
 
     document.querySelectorAll('.nav-btn').forEach(b => {
@@ -44,31 +44,55 @@ async function caricaDettagliCampo() {
     const campo = await res.json();
     const div = document.getElementById('dettaglio-campo');
 
-    let fotoHtml = campo.foto ? campo.foto.map(f => `<img src="${f}" width="200" style="margin:5px">`).join('') : '';
-    
+    let fotoHtml = '';
+    if (campo.foto && campo.foto.length > 0) {
+        fotoHtml = `
+            <div class="photos">
+                ${campo.foto.map(f => `
+                    <img src="${f}" alt="Foto campo">
+                `).join('')}
+            </div>
+        `;
+    }
+
     const adesso = new Date();
-    let torneiHtml = "<h4>Tornei in questo campo:</h4><ul>";
-    if (campo.tornei) {
+    let torneiHtml = '<h4>Tornei in questo campo:</h4><ul>';
+
+    if (campo.tornei && campo.tornei.length > 0) {
         campo.tornei.forEach(t => {
             const dataT = new Date(t.data);
-            const stile = dataT > adesso ? "font-weight:bold; color:green;" : "color:gray;";
-            const label = dataT > adesso ? "(FUTURO)" : "(PASSATO)";
-            torneiHtml += `<li style="${stile}">${t.nome} - ${dataT.toLocaleDateString()} ${label}</li>`;
-        });
-    }
-    torneiHtml += "</ul>";
+            const futuro = dataT > adesso;
 
-    const mappaHtml = `<h4>Mappa</h4><p>Coordinate: ${campo.latitudine}, ${campo.longitudine}</p>
-        <a href="https://www.google.com/maps?q=${campo.latitudine},${campo.longitudine}" target="_blank">Apri su Google Maps</a>`;
+            torneiHtml += `
+                <li style="${futuro ? 'font-weight:bold;color:green;' : 'color:gray;'}">
+                    ${t.nome} - ${dataT.toLocaleDateString()} ${futuro ? '(FUTURO)' : '(PASSATO)'}
+                </li>
+            `;
+        });
+    } else {
+        torneiHtml += '<li>Nessun torneo associato</li>';
+    }
+
+    torneiHtml += '</ul>';
+
+    // MAPPA
+    const mappaHtml = `
+        <h4>Mappa</h4>
+        <p>Coordinate: ${campo.latitudine}, ${campo.longitudine}</p>
+        <a href="https://www.google.com/maps?q=${campo.latitudine},${campo.longitudine}" target="_blank">
+            Apri su Google Maps
+        </a>
+    `;
 
     div.innerHTML = `
         <h3>${campo.nome}</h3>
         <p>Buche: ${campo.numeroBuche} | Par: ${campo.par}</p>
-        <div>${fotoHtml}</div>
+        ${fotoHtml}
         ${torneiHtml}
         ${mappaHtml}
     `;
 }
+
 
 
 async function caricaGiocatori(classifica = false) {
