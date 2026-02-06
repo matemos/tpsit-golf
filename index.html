@@ -1,90 +1,83 @@
 <!DOCTYPE html>
 <html lang="it">
-  <head>
+<head>
     <meta charset="UTF-8" />
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="style.css" />
-
-    <title>World Golf Tournament - Management</title>
-  </head>
-  <body>
+    <title>Golf Tournament Management</title>
+</head>
+<body>
     <header>
-      <h1>World Golf Tournament System</h1>
-      <nav>
-        <button class="nav-btn" onclick="showSection('sez-campi', this)">
-          Campi
-        </button>
-        <button class="nav-btn" onclick="showSection('sez-giocatori', this)">
-          Giocatori
-        </button>
-        <button class="nav-btn" onclick="showSection('sez-tornei', this)">
-          Tornei
-        </button>
-        <button class="nav-btn" onclick="showSection('sez-inserimento', this)">
-          Inserimento Dati
-        </button>
-      </nav>
+        <h1>World Golf <span>Tournament</span></h1>
+        <nav>
+            <button class="nav-btn nav-active" onclick="showSection('sez-campi', this)">Campi</button>
+            <button class="nav-btn" onclick="showSection('sez-giocatori', this)">Giocatori</button>
+            <button class="nav-btn" onclick="showSection('sez-tornei', this)">Tornei</button>
+            <button class="nav-btn" onclick="showSection('sez-inserimento', this)">Gestione</button>
+        </nav>
     </header>
 
-    <section id="sez-campi">
-      <div id="select">
-        <h2>Elenco Campi</h2>
-        <select id="select-campi" onchange="caricaDettagliCampo()">
-          <option value="">Seleziona un campo...</option>
-        </select>
-      </div>
-     
-      <div id="dettaglio-campo"></div>
-    </section>
+    <main class="container">
+        <section id="sez-campi" class="active-section">
+            <div class="sidebar">
+                <h2>Elenco Campi</h2>
+                <select id="select-campi" onchange="caricaDettagliCampo()">
+                    <option value="">Seleziona un campo...</option>
+                </select>
+            </div>
+            <div id="dettaglio-campo" class="content-card">
+                <p class="placeholder-text">Seleziona un campo per visualizzare i dettagli.</p>
+            </div>
+        </section>
 
-    <section id="sez-giocatori" style="display: none">
-      <h2>Giocatori</h2>
-      <button onclick="caricaClassificaHandicap()">
-        Ordina per Handicap (Classifica)
-      </button>
-      <ul id="lista-giocatori"></ul>
+        <section id="sez-giocatori" style="display: none">
+            <div class="sidebar">
+                <h2>Giocatori</h2>
+                <button class="btn-secondary" onclick="caricaClassificaHandicap()">Ordina per Handicap</button>
+                <ul id="lista-giocatori" class="list-container"></ul>
+            </div>
+            <div class="content-card">
+                <div id="dettaglio-giocatore"></div>
+                <hr>
+                <h3>Nuovo Giocatore</h3>
+                <form id="form-giocatore" class="grid-form">
+                    <input type="text" id="p-nome" placeholder="Nome Giocatore" required />
+                    <input type="number" id="p-handicap" placeholder="Handicap" required />
+                    <button type="button" class="btn-primary" onclick="creaGiocatore()">Salva</button>
+                </form>
+            </div>
+        </section>
 
-      <div id="dettaglio-giocatore"></div>
+        <section id="sez-tornei" style="display: none">
+            <div class="sidebar">
+                <h2>Tornei</h2>
+                <div id="lista-tornei" class="list-container"></div>
+            </div>
+            <div id="dettaglio-torneo" class="content-card"></div>
+        </section>
 
-      <h3>Inserisci Nuovo Giocatore</h3>
-      <form id="form-giocatore">
-        <input type="text" id="p-nome" placeholder="Nome Giocatore" required />
-        <input type="number" id="p-handicap" placeholder="Handicap" required />
-        <button type="button" onclick="creaGiocatore()">Salva Giocatore</button>
-      </form>
-    </section>
-
-    <section id="sez-tornei" style="display: none">
-      <h2>Tornei</h2>
-      <div id="lista-tornei"></div>
-      <div id="dettaglio-torneo"></div>
-    </section>
-
-    <section id="sez-inserimento" style="display: none">
-      <h3>Inserisci Nuova Prestazione</h3>
-      <form id="form-prestazione">
-        <select id="ins-pres-giocatore"></select>
-        <select id="ins-pres-torneo"></select>
-        <input
-          type="number"
-          id="ins-pres-colpi"
-          placeholder="Numero Colpi"
-          required
-        />
-        <button type="button" onclick="creaPrestazione()">
-          Registra Prestazione
-        </button>
-      </form>
-
-      <h3>Inserisci Nuovo Torneo</h3>
-      <form id="form-torneo">
-        <input type="text" id="t-nome" placeholder="Nome Torneo" required />
-        <input type="datetime-local" id="t-data" required />
-        <select id="t-campo-id"></select>
-        <button type="button" onclick="creaTorneo()">Crea Torneo</button>
-      </form>
-    </section>
+        <section id="sez-inserimento" style="display: none">
+            <div class="content-card">
+                <h3>Registra Prestazione</h3>
+                <form id="form-prestazione" class="grid-form">
+                    <select id="ins-pres-giocatore"></select>
+                    <select id="ins-pres-torneo"></select>
+                    <input type="number" id="ins-pres-colpi" placeholder="Numero Colpi" required />
+                    <button type="button" class="btn-primary" onclick="creaPrestazione()">Registra</button>
+                </form>
+            </div>
+            <div class="content-card">
+                <h3>Crea Nuovo Torneo</h3>
+                <form id="form-torneo" class="grid-form">
+                    <input type="text" id="t-nome" placeholder="Nome Torneo" required />
+                    <input type="datetime-local" id="t-data" required />
+                    <select id="t-campo-id"></select>
+                    <button type="button" class="btn-primary" onclick="creaTorneo()">Crea</button>
+                </form>
+            </div>
+        </section>
+    </main>
 
     <script src="script.js"></script>
-  </body>
+</body>
 </html>

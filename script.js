@@ -7,10 +7,7 @@ function showSection(id, btn) {
         document.getElementById(s).style.display = (s === id) ? 'flex' : 'none';
     });
 
-    document.querySelectorAll('.nav-btn').forEach(b => {
-        b.classList.remove('nav-active');
-    });
-
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('nav-active'));
     btn.classList.add('nav-active');
 
     if (id === 'sez-campi') caricaCampi();
@@ -18,7 +15,6 @@ function showSection(id, btn) {
     if (id === 'sez-tornei') caricaTornei();
     if (id === 'sez-inserimento') preparaFormInserimento();
 }
-
 
 
 async function caricaCampi() {
@@ -29,11 +25,6 @@ async function caricaCampi() {
     campi.forEach(c => {
         select.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
     });
-    
-    const selectT = document.getElementById('t-campo-id');
-    if(selectT) {
-        selectT.innerHTML = campi.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
-    }
 }
 
 async function caricaDettagliCampo() {
@@ -44,108 +35,79 @@ async function caricaDettagliCampo() {
     const campo = await res.json();
     const div = document.getElementById('dettaglio-campo');
 
-    let fotoHtml = '';
-    if (campo.foto && campo.foto.length > 0) {
-        fotoHtml = `
-            <div class="photos">
-                ${campo.foto.map(f => `
-                    <img src="${f}" alt="Foto campo">
-                `).join('')}
-            </div>
-        `;
-    }
+    const fotoHtml = (campo.foto && campo.foto.length > 0) 
+        ? `<div class="photos">${campo.foto.map(f => `<img src="${f}" alt="Foto">`).join('')}</div>` 
+        : '';
 
     const adesso = new Date();
-    let torneiHtml = '<h4>Tornei in questo campo:</h4><ul>';
-
+    let torneiHtml = '<h4>Tornei in programma</h4><ul class="list-container">';
     if (campo.tornei && campo.tornei.length > 0) {
         campo.tornei.forEach(t => {
             const dataT = new Date(t.data);
-            const futuro = dataT > adesso;
-
-            torneiHtml += `
-                <li style="${futuro ? 'font-weight:bold;color:green;' : 'color:gray;'}">
-                    ${t.nome} - ${dataT.toLocaleDateString()} ${futuro ? '(FUTURO)' : '(PASSATO)'}
-                </li>
-            `;
+            const isFuturo = dataT > adesso;
+            torneiHtml += `<li style="border-left: 4px solid ${isFuturo ? '#4caf50' : '#555'}">
+                ${t.nome} <span>${dataT.toLocaleDateString()}</span>
+            </li>`;
         });
     } else {
-        torneiHtml += '<li>Nessun torneo associato</li>';
+        torneiHtml += '<li>Nessun torneo registrato</li>';
     }
-
     torneiHtml += '</ul>';
-
-    // MAPPA
-    const mappaHtml = `
-        <h4>Mappa</h4>
-        <p>Coordinate: ${campo.latitudine}, ${campo.longitudine}</p>
-        <a href="https://www.google.com/maps?q=${campo.latitudine},${campo.longitudine}" target="_blank">
-            Apri su Google Maps
-        </a>
-    `;
 
     div.innerHTML = `
         <h3>${campo.nome}</h3>
-        <p>Buche: ${campo.numeroBuche} | Par: ${campo.par}</p>
+        <p><strong>Configurazione:</strong> ${campo.numeroBuche} Buche | Par ${campo.par}</p>
         ${fotoHtml}
         ${torneiHtml}
-        ${mappaHtml}
+        <div style="margin-top:20px">
+            <a href="https://www.google.com/maps?q=${campo.latitudine},${campo.longitudine}" target="_blank" class="btn-primary" style="text-decoration:none; display:inline-block">Apri Mappa</a>
+        </div>
     `;
 }
-
-
 
 async function caricaGiocatori(classifica = false) {
     const res = await fetch(`${BASE_URL}/giocatori`);
     let giocatori = await res.json();
-
-    if (classifica) {
-        giocatori.sort((a, b) => a.handicap - b.handicap);
-    }
+    if (classifica) giocatori.sort((a, b) => a.handicap - b.handicap);
 
     const lista = document.getElementById('lista-giocatori');
-    lista.innerHTML = "";
-    giocatori.forEach(g => {
-        const li = document.createElement('li');
-        li.innerHTML = `${g.nome} (Handicap: ${g.handicap}) <button onclick="dettaglioGiocatore(${g.id})">Vedi Prestazioni</button>`;
-        lista.appendChild(li);
-    });
-}
-
-function caricaClassificaHandicap() {
-    caricaGiocatori(true);
+    lista.innerHTML = giocatori.map(g => `
+        <li>
+            ${g.nome} (HCP: ${g.handicap})
+            <button class="btn-primary" style="padding:4px 8px; font-size:0.7rem" onclick="dettaglioGiocatore(${g.id})">Info</button>
+        </li>
+    `).join('');
 }
 
 async function dettaglioGiocatore(id) {
     const res = await fetch(`${BASE_URL}/giocatori/${id}`);
     const g = await res.json();
     const div = document.getElementById('dettaglio-giocatore');
-    
-    let presHtml = g.prestazioni.map(p => `<li>Torneo: ${p.torneo.nome} - Colpi: ${p.colpi}</li>`).join('');
-    div.innerHTML = `<h4>Prestazioni di ${g.nome}</h4><ul>${presHtml}</ul>`;
+    const presHtml = g.prestazioni.map(p => `<li>${p.torneo.nome}: <strong>${p.colpi} colpi</strong></li>`).join('');
+    div.innerHTML = `<h4>Prestazioni di ${g.nome}</h4><ul class="list-container">${presHtml || '<li>Nessuna gara disputata</li>'}</ul>`;
 }
 
 async function creaGiocatore() {
     const nome = document.getElementById('p-nome').value;
     const handicap = document.getElementById('p-handicap').value;
-    
+    if(!nome || !handicap) return alert("Compila i campi");
+
     await fetch(`${BASE_URL}/giocatori`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ nome, handicap: parseInt(handicap) })
     });
-    alert("Giocatore inserito!");
     caricaGiocatori();
 }
+
 
 async function caricaTornei() {
     const res = await fetch(`${BASE_URL}/tornei`);
     const tornei = await res.json();
-    const div = document.getElementById('lista-tornei');
-    div.innerHTML = tornei.map(t => `
+    document.getElementById('lista-tornei').innerHTML = tornei.map(t => `
         <div>
-            <strong>${t.nome}</strong> (${new Date(t.data).toLocaleDateString()})
-            <button onclick="dettaglioTorneo(${t.id})">Classifica e Iscritti</button>
+            ${t.nome}
+            <button class="btn-primary" style="padding:4px 8px; font-size:0.7rem" onclick="dettaglioTorneo(${t.id})">Classifica</button>
         </div>
     `).join('');
 }
@@ -154,21 +116,18 @@ async function dettaglioTorneo(id) {
     const res = await fetch(`${BASE_URL}/tornei/${id}`);
     const t = await res.json();
     const div = document.getElementById('dettaglio-torneo');
-
     const classifica = [...t.prestazioni].sort((a, b) => a.colpi - b.colpi);
 
-    let html = `<h4>Classifica Torneo: ${t.nome}</h4><table border="1">
-        <tr><th>Giocatore</th><th>Colpi</th><th>Azione</th></tr>`;
-    
+    let html = `<h3>Classifica: ${t.nome}</h3><table>
+        <thead><tr><th>Giocatore</th><th>Colpi</th><th>Azioni</th></tr></thead><tbody>`;
     classifica.forEach(p => {
         html += `<tr>
             <td>${p.giocatore.nome}</td>
-            <td><input type="number" id="edit-colpi-${p.id}" value="${p.colpi}"></td>
-            <td><button onclick="aggiornaPrestazione(${p.id}, ${t.id})">Aggiorna</button></td>
+            <td><input type="number" id="edit-colpi-${p.id}" value="${p.colpi}" style="width:60px; margin:0"></td>
+            <td><button class="btn-primary" onclick="aggiornaPrestazione(${p.id}, ${t.id})">OK</button></td>
         </tr>`;
     });
-    html += `</table>`;
-    div.innerHTML = html;
+    div.innerHTML = html + `</tbody></table>`;
 }
 
 async function aggiornaPrestazione(presId, torneoId) {
@@ -178,57 +137,53 @@ async function aggiornaPrestazione(presId, torneoId) {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ colpi: parseInt(nuoviColpi) })
     });
-    alert("Aggiornato!");
     dettaglioTorneo(torneoId);
 }
 
 
 async function preparaFormInserimento() {
-    const resG = await fetch(`${BASE_URL}/giocatori`);
+    const [resG, resT, resC] = await Promise.all([
+        fetch(`${BASE_URL}/giocatori`),
+        fetch(`${BASE_URL}/tornei`),
+        fetch(`${BASE_URL}/campi`)
+    ]);
+    
     const giocatori = await resG.json();
-    const resT = await fetch(`${BASE_URL}/tornei`);
     const tornei = await resT.json();
+    const campi = await resC.json();
 
     document.getElementById('ins-pres-giocatore').innerHTML = giocatori.map(g => `<option value="${g.id}">${g.nome}</option>`).join('');
     document.getElementById('ins-pres-torneo').innerHTML = tornei.map(t => `<option value="${t.id}">${t.nome}</option>`).join('');
-    
-
-    caricaCampi();
+    document.getElementById('t-campo-id').innerHTML = campi.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
 }
 
 async function creaPrestazione() {
-    const gId = document.getElementById('ins-pres-giocatore').value;
-    const tId = document.getElementById('ins-pres-torneo').value;
-    const colpi = document.getElementById('ins-pres-colpi').value;
-
+    const body = {
+        giocatore: { id: parseInt(document.getElementById('ins-pres-giocatore').value) },
+        torneo: { id: parseInt(document.getElementById('ins-pres-torneo').value) },
+        colpi: parseInt(document.getElementById('ins-pres-colpi').value)
+    };
     await fetch(`${BASE_URL}/prestazioni`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            giocatore: { id: parseInt(gId) },
-            torneo: { id: parseInt(tId) },
-            colpi: parseInt(colpi)
-        })
+        body: JSON.stringify(body)
     });
-    alert("Prestazione registrata!");
+    alert("Registrata!");
 }
 
 async function creaTorneo() {
-    const nome = document.getElementById('t-nome').value;
-    const data = document.getElementById('t-data').value;
-    const campoId = document.getElementById('t-campo-id').value;
-
+    const body = {
+        nome: document.getElementById('t-nome').value,
+        data: document.getElementById('t-data').value,
+        campo: { id: parseInt(document.getElementById('t-campo-id').value) }
+    };
     await fetch(`${BASE_URL}/tornei`, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            nome,
-            data,
-            campo: { id: parseInt(campoId) }
-        })
+        body: JSON.stringify(body)
     });
-    alert("Torneo creato!");
+    alert("Torneo Creato!");
 }
 
-
-showSection('sez-campi', document.getElementsByClassName('nav-btn')[0]);
+// Init
+caricaCampi();
